@@ -1,133 +1,105 @@
-import mapAgeCleaner from 'map-age-cleaner';
+export type EqualityFn = (newArgs: any[], lastArgs: any[]) => boolean;
 
-const cacheStore = new WeakMap();
-const memoizedFunctions = new WeakMap();
-
-////////////////////////////////////////////////////////////////////////////////
-
-export type Options<Arguments extends unknown[], CacheKey> = {
-  cache?: Map<any, { data: any; maxAge: number }>;
-  cacheKey?: (args: Arguments) => CacheKey;
+export type Options = {
+  isEqual?: EqualityFn;
   maxAge?: number;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
 /**
- * `memoize` takes in a function and returns a memoized version.
- * By default, the first argument is taken as the cache key.
+ * memoize remembers the latest arguments and result of a given function.
+ * After `options.maxAge` the cached result is marked as stale.
+ * This is a modified version of https://github.com/alexreardon/memoize-one
  */
-export const memoize = <Arguments extends unknown[], CacheKey>(
-  fn: Function,
-  options?: Options<Arguments, CacheKey>,
-) => {
-  const { cache, cacheKey, maxAge } = {
-    cache: new Map(),
-    ...options,
-  };
+export const memoize = <
+  ResultFn extends (this: any, ...newArgs: any[]) => ReturnType<ResultFn>
+>(
+  resultFn: ResultFn,
+  options: Options = {},
+): ResultFn => {
+  let isEqual = options.isEqual || areInputsEqual;
+  let maxAge = options.maxAge || 2147483647; // milliseconds
 
-  if (typeof maxAge === 'number') {
-    mapAgeCleaner(cache);
-  }
+  let lastThis: unknown;
+  let lastArgs: unknown[] = [];
+  let lastResult: ReturnType<ResultFn>;
+  let calledOnce = false;
+  let stale = false;
+  let timer: NodeJS.Timeout;
 
-  const memoized = function (this: any, ...args: Arguments): any {
-    const key = cacheKey ? cacheKey(args) : args[0];
-
-    const cacheItem = cache.get(key);
-    if (cacheItem) {
-      return cacheItem.data;
+  // Breaking cache when context or arguments change.
+  // Because of `this` (no pun intended), it cannot be written as an
+  // arrow-function.
+  function memoized(
+    this: unknown,
+    ...newArgs: unknown[]
+  ): ReturnType<ResultFn> {
+    if (
+      calledOnce &&
+      !stale &&
+      lastThis === this &&
+      isEqual(newArgs, lastArgs)
+    ) {
+      return lastResult;
     }
 
-    const result = fn.apply(this, args);
+    // Doing the lastResult assignment first so that if it throws
+    // nothing will be overwritten. This is because throwing durging an
+    // assignment aborts the assignment.
+    lastResult = resultFn.apply(this, newArgs);
+    calledOnce = true;
+    lastThis = this;
+    lastArgs = newArgs;
+    stale = false;
 
-    cache.set(key, {
-      data: result,
-      maxAge: maxAge ? Date.now() + maxAge : Infinity,
-    });
+    // Start a timer to mark the `lastResult` as stale after `maxAge`.
+    timer = setTimeout(() => {
+      stale = true;
+    }, maxAge);
 
-    return result;
-  };
+    // Allow the node process to exit before the timer ends. This is only
+    // relevant server side.
+    // @see https://nodejs.org/api/timers.html#timers_immediate_unref
+    if (typeof window === 'undefined') {
+      timer.unref();
+    }
 
-  cacheStore.set(memoized, cache);
-
-  return memoized;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * `clear` forcefully clears the memoize cache.
- */
-memoize.clear = (fn: Function) => {
-  if (!cacheStore.has(fn)) {
-    throw new Error(`Can't clear a function that was not memoized!`);
-  }
-
-  const cache = cacheStore.get(fn);
-  if (typeof cache.clear === 'function') {
-    cache.clear();
-  }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-export type pOptions<Arguments extends unknown[], CacheKey> = {
-  cache?: Map<any, { data: any; maxAge: number }>;
-  cacheKey?: (args: Arguments) => CacheKey;
-  maxAge?: number;
-  cachePromiseRejection?: Boolean;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * `pMemoize` returns a memoized version of the `fn` function.
- * It is a thin wrapper around the base `memoize` function witn the addition
- * to automatically remove rejected promises from the cache.
- */
-export const asyncMemoize = <Arguments extends unknown[], CacheKey>(
-  fn: Function,
-  options?: pOptions<Arguments, CacheKey>,
-) => {
-  const { cache, cacheKey, cachePromiseRejection, maxAge } = {
-    cache: new Map(),
-    cacheKey: ([firstArgument]: Arguments) => firstArgument,
-    cachePromiseRejection: false,
-    ...options,
-  };
-
-  const memoized = memoize(fn, {
-    cache,
-    cacheKey,
-    maxAge,
-  });
-
-  const memoizedAdapter = function (this: any, ...args: Arguments) {
-    const cacheItem = memoized.apply(this, args);
-
-    if (!cachePromiseRejection && cacheItem && cacheItem.catch) {
-      cacheItem.catch(() => {
-        cache.delete(cacheKey(args));
+    // If the `lastResult` is a promise, handle its possible rejection and make
+    // sure we don't cache it.
+    if (lastResult != null && typeof (lastResult as any).then === 'function') {
+      const pendingPromise = lastResult as Promise<ReturnType<ResultFn>>;
+      pendingPromise.then(null, () => {
+        // Avoid dropping already resolved promises that settled while this
+        // promise was in flight
+        if (pendingPromise === lastResult) {
+          stale = true;
+        }
       });
     }
+    return lastResult;
+  }
 
-    return cacheItem;
-  };
-
-  memoizedFunctions.set(memoizedAdapter, memoized);
-
-  return memoizedAdapter;
+  return memoized as ResultFn;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * clear forcefully clears the `pMemoize` cache.
+ * `areInputsEqual` tests if two argument inputs are equal.
  */
-asyncMemoize.clear = (memoized: Function) => {
-  if (!memoizedFunctions.has(memoized)) {
-    throw new Error(`Can't clear a function that was not memoized!`);
+const areInputsEqual = (
+  newInputs: unknown[],
+  lastInputs: unknown[],
+): Boolean => {
+  // no checks needed if the inputs length has changed
+  if (newInputs.length !== lastInputs.length) {
+    return false;
   }
 
-  memoize.clear(memoizedFunctions.get(memoized));
+  for (let i = 0; i < newInputs.length; i++) {
+    // using shallow equality check
+    if (newInputs[i] !== lastInputs[i]) {
+      return false;
+    }
+  }
+  return true;
 };
