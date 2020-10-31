@@ -172,6 +172,6 @@ $ ./Taskfile.sh test -w
 
 ---
 
-This project was bootstrapped with [jvdx](https://github.com/joelvoss/jvdx).
+This project was bootstrapped with [@jvdx/core](https://github.com/joelvoss/jvdx-core).
 
 [node+npm]: https://nodejs.org
