@@ -9,7 +9,7 @@ export type Options = {
 // After `options.maxAge` the cached result is marked as stale.
 // This is a modified version of https://github.com/alexreardon/memoize-one
 export const memoize = <
-	ResultFn extends (this: any, ...newArgs: any[]) => ReturnType<ResultFn>
+	ResultFn extends (this: any, ...newArgs: any[]) => ReturnType<ResultFn>,
 >(
 	resultFn: ResultFn,
 	options: Options = {},
