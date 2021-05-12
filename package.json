@@ -14,7 +14,11 @@
   },
   "source": "src/index.ts",
   "main": "dist/memoize-lit.js",
-  "module": "dist/memoize-lit.es.js",
+  "module": "dist/memoize-lit.m.js",
+  "exports": {
+    "require": "./dist/memoize-lit.js",
+    "default": "./dist/memoize-lit.modern.js"
+  },
   "types": "dist/index.d.ts",
   "files": [
     "dist",
