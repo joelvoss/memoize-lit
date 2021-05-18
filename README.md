@@ -1,6 +1,6 @@
 # memoize-lit
 
-A memoization library that stors the results of expensive function calls and
+A memoization library that stores the results of expensive function calls and
 returns the cached result when the same inputs occur again.
 
 > Note: This helper works both with synchronous and asynchronous functions,
@@ -94,7 +94,7 @@ memoizedMultiply(2, 3); // 6
 
 #### options
 
-Provide a custom equality function and/or the maxAge time in milliseconds.
+Provide a custom equality function and/or the `maxAge` time in milliseconds.
 
 ```ts
 // Signature
@@ -121,7 +121,7 @@ const memoizedAxios = memoize(axios, { maxAge: 100 });
 ```
 
 The default equality function is a shallow equal check of all arguments
-(each argument is compared with ===). If the length of arguments change, then
+(each argument is compared with `===`). If the length of arguments change, then
 the default equality function makes no shallow equality checks.
 
 The default `maxAge` value in milliseconds is `2147483647`, which is the
@@ -136,15 +136,15 @@ This **will not** drop the memoized result. This means that the memoized
 function will pretend like it was never called with arguments that made it
 throw.
 
-This behaviour is **different** for Promises, because a Promise can
-Promises never throw but instead return a rejected state. If a Promise is being
-_rejected_, mark it as _stale_ so the next invocation returns a fresh result.
+This behaviour is **different** for Promises, because a Promise can never throw
+but instead return a rejected state. If a Promise is being rejected, it is being
+marked as _stale_ so the next invocation returns a fresh result.
 
 > Note: A rejected promise never overwrites an intermediate successful promise.
 > In this case the rejected promise is simply ignored.
 
 This library does not handle promise rejections for you, so always make sure
-to wrap a async memmoized function in a `try / catch` block.
+to wrap an async memoized function in a `try / catch` block.
 
 ## Development
 
