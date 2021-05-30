@@ -235,7 +235,7 @@ describe('all the types', () => {
 				expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
 			});
 
-			it('should not execute the memoized function if the arguments have not changed', async done => {
+			it('should not execute the memoized function if the arguments have not changed', async () => {
 				memoized(...first.args);
 				memoized(...first.args);
 				expect(mock).toHaveBeenCalledTimes(1);
@@ -243,7 +243,6 @@ describe('all the types', () => {
 				await asyncMemoized(...first.args);
 				await asyncMemoized(...first.args);
 				expect(asyncMock).toHaveBeenCalledTimes(1);
-				done();
 			});
 
 			it('should invalidate a memoize cache if new arguments are provided', () => {
@@ -566,7 +565,7 @@ describe('throwing / rejecting', () => {
 		expect(firstError).not.toBe(secondError);
 	});
 
-	it('should not memoize a rejected result', async done => {
+	it('should not memoize a rejected result', async () => {
 		const willReject = jest.fn((message: string) => {
 			return new Promise((_, reject) => reject(new Error(message)));
 		});
@@ -589,7 +588,6 @@ describe('throwing / rejecting', () => {
 		expect(willReject).toHaveBeenCalledTimes(2);
 		expect(firstError).toEqual(Error('hello'));
 		expect(firstError).not.toBe(secondError);
-		done();
 	});
 
 	it('should not break the memoization cache of a successful call', () => {
@@ -687,7 +685,7 @@ describe('throwing / rejecting', () => {
 		});
 	});
 
-	it('should not drop resolved promises that settled while a rejected one was in flight', async done => {
+	it('should not drop resolved promises that settled while a rejected one was in flight', async () => {
 		const willReject = jest.fn((key: string) => {
 			if (key === 'reject') {
 				return new Promise((_, reject) => reject(new Error(key)));
@@ -724,7 +722,6 @@ describe('throwing / rejecting', () => {
 		const result4 = await memoized('you');
 		expect(willReject).toHaveBeenCalledTimes(1);
 		expect(result3).not.toBe(result4);
-		done();
 	});
 });
 
@@ -740,7 +737,7 @@ describe('maxAge option', () => {
 		memoized = memoize(mock, { maxAge: 100 });
 	});
 
-	it('should break the memoization cache if maxAge elapsed', async done => {
+	it('should break the memoization cache if maxAge elapsed', async () => {
 		expect(memoized(1, 2)).resolves.toBe(3);
 		expect(memoized(1, 2)).resolves.toBe(3);
 
@@ -754,6 +751,5 @@ describe('maxAge option', () => {
 		expect(memoized(1, 2)).resolves.toBe(3);
 		expect(memoized(1, 2)).resolves.toBe(3);
 		expect(mock).toHaveBeenCalledTimes(2);
-		done();
 	});
 });

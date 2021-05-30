@@ -14,5 +14,7 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+
+    "esModuleInterop": true,
   }
 }
