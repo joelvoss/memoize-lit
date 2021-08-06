@@ -17,7 +17,7 @@
   "module": "dist/memoize-lit.m.js",
   "exports": {
     "require": "./dist/memoize-lit.js",
-    "default": "./dist/memoize-lit.modern.js"
+    "import": "./dist/memoize-lit.modern.js"
   },
   "types": "dist/index.d.ts",
   "files": [
