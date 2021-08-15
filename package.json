@@ -12,11 +12,12 @@
     "type": "git",
     "url": "git+https://github.com/joelvoss/memoize-lit.git"
   },
+  "type": "module",
   "source": "src/index.ts",
-  "main": "dist/memoize-lit.js",
-  "module": "dist/memoize-lit.m.js",
+  "main": "dist/memoize-lit.cjs",
+  "module": "dist/memoize-lit.module.js",
   "exports": {
-    "require": "./dist/memoize-lit.js",
+    "require": "./dist/memoize-lit.cjs",
     "import": "./dist/memoize-lit.modern.js"
   },
   "types": "dist/index.d.ts",
