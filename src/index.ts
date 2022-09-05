@@ -64,7 +64,9 @@ export const memoize = <
 		// If the `lastResult` is a promise, handle its possible rejection and make
 		// sure we don't cache it.
 		if (lastResult != null && typeof (lastResult as any).then === 'function') {
-			const pendingPromise = lastResult as Promise<ReturnType<ResultFn>>;
+			const pendingPromise = lastResult as unknown as Promise<
+				ReturnType<ResultFn>
+			>;
 			pendingPromise.then(null, () => {
 				// Avoid dropping already resolved promises that settled while this
 				// promise was in flight
