@@ -17,6 +17,7 @@
   "main": "dist/memoize-lit.cjs",
   "module": "dist/memoize-lit.module.js",
   "exports": {
+    "types": "./dist/index.d.ts",
     "require": "./dist/memoize-lit.cjs",
     "import": "./dist/memoize-lit.modern.js"
   },
@@ -30,7 +31,7 @@
     "prepublishOnly": "./Taskfile.sh build"
   },
   "devDependencies": {
-    "@jvdx/core": "^3.0.0",
+    "@jvdx/core": "^3.1.0",
     "@types/jest": "^29.2.2",
     "typescript": "4.8.4"
   },

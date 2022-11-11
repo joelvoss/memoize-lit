@@ -1,4 +1,4 @@
-import { memoize, EqualityFn } from '../src/index';
+import { memoize } from '../src/index';
 
 function getA(this: { a: number } | null | undefined): number {
 	if (this == null) {
@@ -468,7 +468,7 @@ describe('custom equality function', () => {
 
 	let mock: Mock;
 	let memoized: Mock;
-	let equalityStub: EqualityFn;
+	let equalityStub: jest.Mock;
 
 	beforeEach(() => {
 		mock = jest.fn((value1: number, value2: number): number => value1 + value2);
@@ -731,7 +731,7 @@ describe('maxAge option', () => {
 
 	beforeEach(() => {
 		mock = jest.fn(
-			(a: number, b: number): Promise<number> =>
+			(a: number, b: number) =>
 				new Promise(resolve => resolve(a + b)),
 		);
 		memoized = memoize(mock, { maxAge: 100 });
