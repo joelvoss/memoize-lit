@@ -31,9 +31,9 @@
     "prepublishOnly": "./Taskfile.sh build"
   },
   "devDependencies": {
-    "@jvdx/core": "^3.4.0",
-    "@types/jest": "^29.5.1",
-    "typescript": "5.0.4"
+    "@jvdx/core": "^3.5.0",
+    "@types/jest": "^29.5.3",
+    "typescript": "5.1.6"
   },
   "prettier": "@jvdx/prettier-config",
   "prettierIgnore": [
