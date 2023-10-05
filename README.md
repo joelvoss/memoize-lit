@@ -9,11 +9,6 @@ returns the cached result when the same inputs occur again.
 This library is a cherry-picked mixture of several popular memoisation
 libraries to make memoisation both easy and straight forward.
 
-## Requirements
-
-- [Node v10+](node+npm)
-- [npm v6+](node+npm)
-
 ## Install
 
 ```bash
