@@ -2,7 +2,7 @@
   "name": "memoize-lit",
   "description": "Memoize promise-returning & async functions",
   "version": "1.6.1",
-  "author": "Joel Voss <mail@joelvoss.com",
+  "author": "Joel Voss <mail@joelvoss.com>",
   "license": "MIT",
   "homepage": "https://github.com/joelvoss/memoize-lit",
   "bugs": {
@@ -16,37 +16,36 @@
     "node": ">=18"
   },
   "type": "module",
-  "source": "src/index.ts",
-  "main": "dist/memoize-lit.cjs",
-  "module": "dist/memoize-lit.module.js",
-  "exports": {
-    "types": "./dist/index.d.ts",
-    "require": "./dist/memoize-lit.cjs",
-    "import": "./dist/memoize-lit.modern.js"
-  },
-  "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "LICENSE"
+    "LICENSE",
+    "README.md"
   ],
+  "source": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
   "scripts": {
     "test": "./Taskfile.sh test",
     "prepublishOnly": "./Taskfile.sh build"
   },
   "devDependencies": {
-    "@jvdx/core": "^3.6.0",
-    "@types/jest": "^29.5.5",
-    "typescript": "5.2.2"
+    "@jvdx/eslint-config": "^4.3.0",
+    "@jvdx/prettier-config": "^0.3.4",
+    "@types/node": "^20.12.12",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11",
+    "vite-plugin-dts": "^3.9.1",
+    "vitest": "^1.6.0"
   },
   "prettier": "@jvdx/prettier-config",
   "prettierIgnore": [
-    "tests/",
-    "dist/"
-  ],
-  "eslintConfig": {
-    "extends": "@jvdx/eslint-config"
-  },
-  "eslintIgnore": [
     "tests/",
     "dist/"
   ]

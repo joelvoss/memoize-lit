@@ -1,3 +1,4 @@
+import { describe, beforeEach, test, expect, vi } from 'vitest';
 import { memoize } from '../src/index';
 
 function getA(this: { a: number } | null | undefined): number {
@@ -12,30 +13,30 @@ let delay = (duration: number) => {
 };
 
 describe('baseline', () => {
-	let mock: jest.Mock;
-	let asyncMock: jest.Mock;
+	let mock;
+	let asyncMock;
 
-	let memoized: jest.Mock;
-	let asyncMemoized: jest.Mock;
+	let memoized;
+	let asyncMemoized;
 
 	beforeEach(() => {
-		mock = jest.fn((a: number, b: number): number => a + b);
+		mock = vi.fn((a: number, b: number): number => a + b);
 		memoized = memoize(mock);
 
-		asyncMock = jest.fn(
+		asyncMock = vi.fn(
 			(a: number, b: number): Promise<number> =>
 				new Promise(resolve => resolve(a + b)),
 		);
 		asyncMemoized = memoize(asyncMock);
 	});
 
-	it(`should return the result of a function`, () => {
+	test(`should return the result of a function`, () => {
 		expect(memoized(1, 2)).toBe(3);
 
 		expect(asyncMemoized(1, 2)).resolves.toBe(3);
 	});
 
-	it(`should return the same result if the arguments have not changed`, () => {
+	test(`should return the same result if the arguments have not changed`, () => {
 		expect(memoized(1, 2)).toBe(3);
 		expect(memoized(1, 2)).toBe(3);
 
@@ -43,7 +44,7 @@ describe('baseline', () => {
 		expect(asyncMemoized(1, 2)).resolves.toBe(3);
 	});
 
-	it(`should not execute the memoized function if the arguments have not changed`, () => {
+	test(`should not execute the memoized function if the arguments have not changed`, () => {
 		memoized(1, 2);
 		memoized(1, 2);
 		expect(mock).toHaveBeenCalledTimes(1);
@@ -53,7 +54,7 @@ describe('baseline', () => {
 		expect(asyncMock).toHaveBeenCalledTimes(1);
 	});
 
-	it(`should invalidate a memoize cache if new arguments are provided`, () => {
+	test(`should invalidate a memoize cache if new arguments are provided`, () => {
 		expect(memoized(1, 2)).toBe(3);
 		expect(memoized(2, 2)).toBe(4);
 		expect(mock).toHaveBeenCalledTimes(2);
@@ -63,7 +64,7 @@ describe('baseline', () => {
 		expect(asyncMock).toHaveBeenCalledTimes(2);
 	});
 
-	it(`should resume memoization after a cache invalidation`, () => {
+	test(`should resume memoization after a cache invalidation`, () => {
 		expect(memoized(1, 2)).toBe(3);
 		expect(mock).toHaveBeenCalledTimes(1);
 		expect(memoized(2, 2)).toBe(4);
@@ -199,7 +200,7 @@ describe('all the types', () => {
 			let asyncMemoized: (...args: any[]) => unknown;
 
 			beforeEach(() => {
-				mock = jest.fn((...args) => {
+				mock = vi.fn((...args) => {
 					if (isShallowEqual(args, first.args)) {
 						return first.result;
 					}
@@ -209,7 +210,7 @@ describe('all the types', () => {
 					throw new Error('unmatched argument');
 				});
 				memoized = memoize(mock);
-				asyncMock = jest.fn((...args) => {
+				asyncMock = vi.fn((...args) => {
 					if (isShallowEqual(args, first.args)) {
 						return new Promise(resolve => resolve(first.result));
 					}
@@ -221,13 +222,13 @@ describe('all the types', () => {
 				asyncMemoized = memoize(asyncMock);
 			});
 
-			it('should return the result of a function', () => {
+			test('should return the result of a function', () => {
 				expect(memoized(...first.args)).toEqual(first.result);
 
 				expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
 			});
 
-			it('should return the same result if the arguments have not changed', () => {
+			test('should return the same result if the arguments have not changed', () => {
 				expect(memoized(...first.args)).toEqual(first.result);
 				expect(memoized(...first.args)).toEqual(first.result);
 
@@ -235,7 +236,7 @@ describe('all the types', () => {
 				expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
 			});
 
-			it('should not execute the memoized function if the arguments have not changed', async () => {
+			test('should not execute the memoized function if the arguments have not changed', async () => {
 				memoized(...first.args);
 				memoized(...first.args);
 				expect(mock).toHaveBeenCalledTimes(1);
@@ -245,7 +246,7 @@ describe('all the types', () => {
 				expect(asyncMock).toHaveBeenCalledTimes(1);
 			});
 
-			it('should invalidate a memoize cache if new arguments are provided', () => {
+			test('should invalidate a memoize cache if new arguments are provided', () => {
 				expect(memoized(...first.args)).toEqual(first.result);
 				expect(memoized(...second.args)).toEqual(second.result);
 				expect(mock).toHaveBeenCalledTimes(2);
@@ -255,7 +256,7 @@ describe('all the types', () => {
 				expect(asyncMock).toHaveBeenCalledTimes(2);
 			});
 
-			it('should resume memoization after a cache invalidation', () => {
+			test('should resume memoization after a cache invalidation', () => {
 				expect(memoized(...first.args)).toEqual(first.result);
 				expect(mock).toHaveBeenCalledTimes(1);
 				expect(memoized(...second.args)).toEqual(second.result);
@@ -276,12 +277,11 @@ describe('all the types', () => {
 
 describe('memoize - respecting "this" context', () => {
 	describe('original function', () => {
-		it('should respect new bindings', () => {
+		test('should respect new bindings', () => {
 			const Foo = function (this: { bar: string }, bar: string) {
 				this.bar = bar;
 			};
 			const memoized = memoize(function (bar) {
-				// @ts-ignore
 				return new Foo(bar);
 			});
 
@@ -290,19 +290,19 @@ describe('memoize - respecting "this" context', () => {
 			expect(result.bar).toBe('baz');
 		});
 
-		it('should respect explicit bindings', () => {
+		test('should respect explicit bindings', () => {
 			const memoized = memoize(function () {
 				return getA.call({ a: 10 });
 			});
 			expect(memoized()).toBe(10);
 		});
 
-		it('should respect hard bindings', () => {
+		test('should respect hard bindings', () => {
 			const memoized = memoize(getA.bind({ a: 20 }));
 			expect(memoized()).toBe(20);
 		});
 
-		it('should respect implicit bindings', () => {
+		test('should respect implicit bindings', () => {
 			const temp = { a: 2, getA };
 			const memoized = memoize(function () {
 				return temp.getA();
@@ -310,12 +310,11 @@ describe('memoize - respecting "this" context', () => {
 			expect(memoized()).toBe(2);
 		});
 
-		it('should respect fat arrow bindings', () => {
+		test('should respect fat arrow bindings', () => {
 			function foo() {
 				// return an arrow function
 				return (): number => {
 					// `this` here is lexically adopted from `foo()`
-					// @ts-ignore
 					return getA.call(this);
 				};
 			}
@@ -324,7 +323,7 @@ describe('memoize - respecting "this" context', () => {
 			expect(memoized()).toBe(50);
 		});
 
-		it('should respect ignored bindings', () => {
+		test('should respect ignored bindings', () => {
 			const bound = getA.bind(null);
 			const memoized = memoize(bound);
 			expect(memoized).toThrow(TypeError);
@@ -332,7 +331,7 @@ describe('memoize - respecting "this" context', () => {
 	});
 
 	describe('memoized function', () => {
-		it('should respect new bindings', () => {
+		test('should respect new bindings', () => {
 			const memoizedGetA = memoize(getA);
 			interface FooInterface {
 				a: number;
@@ -344,16 +343,14 @@ describe('memoize - respecting "this" context', () => {
 				this.result = memoizedGetA.call(this);
 			};
 
-			// @ts-ignore
 			const foo1 = new Foo(10);
-			// @ts-ignore
 			const foo2 = new Foo(20);
 
 			expect(foo1.result).toBe(10);
 			expect(foo2.result).toBe(20);
 		});
 
-		it('should respect implicit bindings', () => {
+		test('should respect implicit bindings', () => {
 			const getAMemoized = memoize(getA);
 			const temp = {
 				a: 5,
@@ -363,18 +360,18 @@ describe('memoize - respecting "this" context', () => {
 			expect(temp.getAMemoized()).toBe(5);
 		});
 
-		it('should respect explicit bindings', () => {
+		test('should respect explicit bindings', () => {
 			const memoized = memoize(getA);
 			expect(memoized.call({ a: 10 })).toBe(10);
 		});
 
-		it('should respect hard bindings', () => {
+		test('should respect hard bindings', () => {
 			const getAMemoized = memoize(getA).bind({ a: 20 });
 			expect(getAMemoized()).toBe(20);
 		});
 
-		it('should memoize hard bound memoized functions', () => {
-			const spy = jest.fn(getA);
+		test('should memoize hard bound memoized functions', () => {
+			const spy = vi.fn(getA);
 			const getAMemoized = memoize(spy).bind({ a: 40 });
 
 			expect(getAMemoized()).toBe(40);
@@ -382,7 +379,7 @@ describe('memoize - respecting "this" context', () => {
 			expect(spy).toHaveBeenCalledTimes(1);
 		});
 
-		it('should respect implicit bindings', () => {
+		test('should respect implicit bindings', () => {
 			const getAMemoized = memoize(getA);
 			const temp = {
 				a: 2,
@@ -392,13 +389,12 @@ describe('memoize - respecting "this" context', () => {
 			expect(temp.getAMemoized()).toBe(2);
 		});
 
-		it('should respect fat arrow bindings', () => {
+		test('should respect fat arrow bindings', () => {
 			const memoizedGetA = memoize(getA);
 			function foo() {
 				// return an arrow function
 				return (): number => {
 					// `this` here is lexically adopted from `foo()`
-					// @ts-ignore
 					return memoizedGetA.call(this);
 				};
 			}
@@ -408,7 +404,7 @@ describe('memoize - respecting "this" context', () => {
 			expect(memoized()).toBe(50);
 		});
 
-		it('should respect ignored bindings', () => {
+		test('should respect ignored bindings', () => {
 			const memoized = memoize(getA);
 			const getResult = function (): number {
 				return memoized.call(null);
@@ -419,7 +415,7 @@ describe('memoize - respecting "this" context', () => {
 });
 
 describe('context change', () => {
-	it('should break the memoization cache if the execution context changes', () => {
+	test('should break the memoization cache if the execution context changes', () => {
 		const memoized = memoize(getA);
 		const temp1 = {
 			a: 20,
@@ -436,8 +432,8 @@ describe('context change', () => {
 });
 
 describe('skip equality check', () => {
-	it('should not run any equality checks if the "this" context changes', () => {
-		const isEqual = jest.fn().mockReturnValue(true);
+	test('should not run any equality checks if the "this" context changes', () => {
+		const isEqual = vi.fn().mockReturnValue(true);
 		const memoized = memoize(getA, { isEqual });
 		// custom equality function not called on first call
 		expect(memoized.apply({ a: 10 })).toBe(10);
@@ -448,9 +444,9 @@ describe('skip equality check', () => {
 		expect(isEqual).not.toHaveBeenCalled();
 	});
 
-	it('should run a custom equality check if the arguments length changes', () => {
-		const mock = jest.fn();
-		const isEqual = jest.fn().mockReturnValue(true);
+	test('should run a custom equality check if the arguments length changes', () => {
+		const mock = vi.fn();
+		const isEqual = vi.fn().mockReturnValue(true);
 		const memoized = memoize(mock, { isEqual });
 
 		memoized(1, 2);
@@ -468,16 +464,16 @@ describe('custom equality function', () => {
 
 	let mock: Mock;
 	let memoized: Mock;
-	let equalityStub: jest.Mock;
+	let equalityStub;
 
 	beforeEach(() => {
-		mock = jest.fn((value1: number, value2: number): number => value1 + value2);
-		equalityStub = jest.fn();
+		mock = vi.fn((value1: number, value2: number): number => value1 + value2);
+		equalityStub = vi.fn();
 		memoized = memoize(mock, { isEqual: equalityStub });
 	});
 
-	it('should call the equality function with the newArgs, lastArgs and lastValue', () => {
-		(equalityStub as jest.Mock).mockReturnValue(true);
+	test('should call the equality function with the newArgs, lastArgs and lastValue', () => {
+		equalityStub.mockReturnValue(true);
 
 		// first call does not trigger equality check
 		memoized(1, 2);
@@ -487,8 +483,8 @@ describe('custom equality function', () => {
 		expect(equalityStub).toHaveBeenCalledWith([1, 4], [1, 2]);
 	});
 
-	it('should return the previous value without executing the result fn if the equality fn returns true', () => {
-		(equalityStub as jest.Mock).mockReturnValue(true);
+	test('should return the previous value without executing the result fn if the equality fn returns true', () => {
+		equalityStub.mockReturnValue(true);
 
 		// hydrate the first value
 		const first: number = memoized(1, 2);
@@ -509,8 +505,8 @@ describe('custom equality function', () => {
 		expect(mock).toHaveBeenCalledTimes(1);
 	});
 
-	it('should return execute and return the result of the result fn if the equality fn returns false', () => {
-		(equalityStub as jest.Mock).mockReturnValue(false);
+	test('should return execute and return the result of the result fn if the equality fn returns false', () => {
+		equalityStub.mockReturnValue(false);
 
 		// hydrate the first value
 		const first: number = memoized(1, 2);
@@ -531,7 +527,7 @@ describe('custom equality function', () => {
 });
 
 describe('throwing / rejecting', () => {
-	it('should throw when the memoized function throws', () => {
+	test('should throw when the memoized function throws', () => {
 		const willThrow = (message: string): never => {
 			throw new Error(message);
 		};
@@ -540,8 +536,8 @@ describe('throwing / rejecting', () => {
 		expect(memoized).toThrow();
 	});
 
-	it('should not memoize a thrown result', () => {
-		const willThrow = jest.fn((message: string) => {
+	test('should not memoize a thrown result', () => {
+		const willThrow = vi.fn((message: string) => {
 			throw new Error(message);
 		});
 		const memoized = memoize(willThrow);
@@ -565,8 +561,8 @@ describe('throwing / rejecting', () => {
 		expect(firstError).not.toBe(secondError);
 	});
 
-	it('should not memoize a rejected result', async () => {
-		const willReject = jest.fn((message: string) => {
+	test('should not memoize a rejected result', async () => {
+		const willReject = vi.fn((message: string) => {
 			return new Promise((_, reject) => reject(new Error(message)));
 		});
 		const memoized = memoize(willReject);
@@ -590,8 +586,8 @@ describe('throwing / rejecting', () => {
 		expect(firstError).not.toBe(secondError);
 	});
 
-	it('should not break the memoization cache of a successful call', () => {
-		const canThrow = jest.fn((shouldThrow: boolean) => {
+	test('should not break the memoization cache of a successful call', () => {
+		const canThrow = vi.fn((shouldThrow: boolean) => {
 			if (shouldThrow) {
 				throw new Error('hey friend');
 			}
@@ -644,7 +640,7 @@ describe('throwing / rejecting', () => {
 		expect(result4).toBe(result3);
 	});
 
-	it('should throw regardless of the type of the thrown value', () => {
+	test('should throw regardless of the type of the thrown value', () => {
 		const values: unknown[] = [
 			null,
 			undefined,
@@ -657,7 +653,7 @@ describe('throwing / rejecting', () => {
 		];
 
 		values.forEach((value: unknown) => {
-			const throwValue = jest.fn(() => {
+			const throwValue = vi.fn(() => {
 				throw value;
 			});
 			const memoized = memoize(throwValue);
@@ -685,8 +681,8 @@ describe('throwing / rejecting', () => {
 		});
 	});
 
-	it('should not drop resolved promises that settled while a rejected one was in flight', async () => {
-		const willReject = jest.fn((key: string) => {
+	test('should not drop resolved promises that settled while a rejected one was in flight', async () => {
+		const willReject = vi.fn((key: string) => {
 			if (key === 'reject') {
 				return new Promise((_, reject) => reject(new Error(key)));
 			}
@@ -701,7 +697,9 @@ describe('throwing / rejecting', () => {
 		// this promise will reject after 100ms
 		try {
 			memoized('reject');
-		} catch (e) {}
+		} catch (e) {
+			/* empty */
+		}
 
 		// in the meantime, issue another promise that resolves
 		const result1 = await memoized('resolve');
@@ -726,18 +724,17 @@ describe('throwing / rejecting', () => {
 });
 
 describe('maxAge option', () => {
-	let mock: jest.Mock<Promise<number>, [number, number]>;
-	let memoized: jest.Mock;
+	let mock;
+	let memoized;
 
 	beforeEach(() => {
-		mock = jest.fn(
-			(a: number, b: number) =>
-				new Promise(resolve => resolve(a + b)),
+		mock = vi.fn(
+			(a: number, b: number) => new Promise(resolve => resolve(a + b)),
 		);
 		memoized = memoize(mock, { maxAge: 100 });
 	});
 
-	it('should break the memoization cache if maxAge elapsed', async () => {
+	test('should break the memoization cache if maxAge elapsed', async () => {
 		expect(memoized(1, 2)).resolves.toBe(3);
 		expect(memoized(1, 2)).resolves.toBe(3);
 
