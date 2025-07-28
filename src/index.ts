@@ -96,7 +96,8 @@ const safeIsNaN =
 	function ponyfill(value) {
 		// NOTE(joel): NaN is the only value in JavaScript which is not equal to
 		// itself.
-		return typeof value === 'number' && value !== value;
+		// biome-ignore lint/suspicious/noSelfCompare: .
+						return typeof value === 'number' && value !== value;
 	};
 
 ////////////////////////////////////////////////////////////////////////////////

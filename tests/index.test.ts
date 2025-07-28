@@ -1,4 +1,4 @@
-import { describe, beforeEach, test, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, type Mock, test, vi } from 'vitest';
 import { memoize } from '../src/index';
 
 function getA(this: { a: number } | null | undefined): number {
@@ -13,11 +13,11 @@ let delay = (duration: number) => {
 };
 
 describe('baseline', () => {
-	let mock;
-	let asyncMock;
+	let mock: Mock<(a: number, b: number) => number>;
+	let asyncMock: Mock<(a: number, b: number) => Promise<number>>;
 
-	let memoized;
-	let asyncMemoized;
+	let memoized: (arg0: number, arg1: number) => void;
+	let asyncMemoized: (arg0: number, arg1: number) => any;
 
 	beforeEach(() => {
 		mock = vi.fn((a: number, b: number): number => a + b);
@@ -30,41 +30,41 @@ describe('baseline', () => {
 		asyncMemoized = memoize(asyncMock);
 	});
 
-	test(`should return the result of a function`, () => {
+	test(`should return the result of a function`, async () => {
 		expect(memoized(1, 2)).toBe(3);
 
-		expect(asyncMemoized(1, 2)).resolves.toBe(3);
+		await expect(asyncMemoized(1, 2)).resolves.toBe(3);
 	});
 
-	test(`should return the same result if the arguments have not changed`, () => {
+	test(`should return the same result if the arguments have not changed`, async () => {
 		expect(memoized(1, 2)).toBe(3);
 		expect(memoized(1, 2)).toBe(3);
 
-		expect(asyncMemoized(1, 2)).resolves.toBe(3);
-		expect(asyncMemoized(1, 2)).resolves.toBe(3);
+		await expect(asyncMemoized(1, 2)).resolves.toBe(3);
+		await expect(asyncMemoized(1, 2)).resolves.toBe(3);
 	});
 
-	test(`should not execute the memoized function if the arguments have not changed`, () => {
+	test(`should not execute the memoized function if the arguments have not changed`, async () => {
 		memoized(1, 2);
 		memoized(1, 2);
 		expect(mock).toHaveBeenCalledTimes(1);
 
-		expect(asyncMemoized(1, 2)).resolves.toBe(3);
-		expect(asyncMemoized(1, 2)).resolves.toBe(3);
+		await expect(asyncMemoized(1, 2)).resolves.toBe(3);
+		await expect(asyncMemoized(1, 2)).resolves.toBe(3);
 		expect(asyncMock).toHaveBeenCalledTimes(1);
 	});
 
-	test(`should invalidate a memoize cache if new arguments are provided`, () => {
+	test(`should invalidate a memoize cache if new arguments are provided`, async () => {
 		expect(memoized(1, 2)).toBe(3);
 		expect(memoized(2, 2)).toBe(4);
 		expect(mock).toHaveBeenCalledTimes(2);
 
-		expect(asyncMemoized(1, 2)).resolves.toBe(3);
-		expect(asyncMemoized(2, 2)).resolves.toBe(4);
+		await expect(asyncMemoized(1, 2)).resolves.toBe(3);
+		await expect(asyncMemoized(2, 2)).resolves.toBe(4);
 		expect(asyncMock).toHaveBeenCalledTimes(2);
 	});
 
-	test(`should resume memoization after a cache invalidation`, () => {
+	test(`should resume memoization after a cache invalidation`, async () => {
 		expect(memoized(1, 2)).toBe(3);
 		expect(mock).toHaveBeenCalledTimes(1);
 		expect(memoized(2, 2)).toBe(4);
@@ -72,11 +72,11 @@ describe('baseline', () => {
 		expect(memoized(2, 2)).toBe(4);
 		expect(mock).toHaveBeenCalledTimes(2);
 
-		expect(asyncMemoized(1, 2)).resolves.toBe(3);
+		await expect(asyncMemoized(1, 2)).resolves.toBe(3);
 		expect(asyncMock).toHaveBeenCalledTimes(1);
-		expect(asyncMemoized(2, 2)).resolves.toBe(4);
+		await expect(asyncMemoized(2, 2)).resolves.toBe(4);
 		expect(asyncMock).toHaveBeenCalledTimes(2);
-		expect(asyncMemoized(2, 2)).resolves.toBe(4);
+		await expect(asyncMemoized(2, 2)).resolves.toBe(4);
 		expect(asyncMock).toHaveBeenCalledTimes(2);
 	});
 });
@@ -222,18 +222,18 @@ describe('all the types', () => {
 				asyncMemoized = memoize(asyncMock);
 			});
 
-			test('should return the result of a function', () => {
+			test('should return the result of a function', async () => {
 				expect(memoized(...first.args)).toEqual(first.result);
 
-				expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
+				await expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
 			});
 
-			test('should return the same result if the arguments have not changed', () => {
+			test('should return the same result if the arguments have not changed', async () => {
 				expect(memoized(...first.args)).toEqual(first.result);
 				expect(memoized(...first.args)).toEqual(first.result);
 
-				expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
-				expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
+				await expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
+				await expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
 			});
 
 			test('should not execute the memoized function if the arguments have not changed', async () => {
@@ -246,17 +246,17 @@ describe('all the types', () => {
 				expect(asyncMock).toHaveBeenCalledTimes(1);
 			});
 
-			test('should invalidate a memoize cache if new arguments are provided', () => {
+			test('should invalidate a memoize cache if new arguments are provided', async () => {
 				expect(memoized(...first.args)).toEqual(first.result);
 				expect(memoized(...second.args)).toEqual(second.result);
 				expect(mock).toHaveBeenCalledTimes(2);
 
-				expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
-				expect(asyncMemoized(...second.args)).resolves.toEqual(second.result);
+				await expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
+				await expect(asyncMemoized(...second.args)).resolves.toEqual(second.result);
 				expect(asyncMock).toHaveBeenCalledTimes(2);
 			});
 
-			test('should resume memoization after a cache invalidation', () => {
+			test('should resume memoization after a cache invalidation', async () => {
 				expect(memoized(...first.args)).toEqual(first.result);
 				expect(mock).toHaveBeenCalledTimes(1);
 				expect(memoized(...second.args)).toEqual(second.result);
@@ -264,11 +264,11 @@ describe('all the types', () => {
 				expect(memoized(...second.args)).toEqual(second.result);
 				expect(mock).toHaveBeenCalledTimes(2);
 
-				expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
+				await expect(asyncMemoized(...first.args)).resolves.toEqual(first.result);
 				expect(asyncMock).toHaveBeenCalledTimes(1);
-				expect(asyncMemoized(...second.args)).resolves.toEqual(second.result);
+				await expect(asyncMemoized(...second.args)).resolves.toEqual(second.result);
 				expect(asyncMock).toHaveBeenCalledTimes(2);
-				expect(asyncMemoized(...second.args)).resolves.toEqual(second.result);
+				await expect(asyncMemoized(...second.args)).resolves.toEqual(second.result);
 				expect(asyncMock).toHaveBeenCalledTimes(2);
 			});
 		});
@@ -460,11 +460,9 @@ describe('skip equality check', () => {
 });
 
 describe('custom equality function', () => {
-	type Mock = (a: number, b: number) => number;
-
 	let mock: Mock;
 	let memoized: Mock;
-	let equalityStub;
+	let equalityStub: Mock;
 
 	beforeEach(() => {
 		mock = vi.fn((value1: number, value2: number): number => value1 + value2);
@@ -541,8 +539,8 @@ describe('throwing / rejecting', () => {
 			throw new Error(message);
 		});
 		const memoized = memoize(willThrow);
-		let firstError;
-		let secondError;
+		let firstError: any;
+		let secondError: any;
 
 		try {
 			memoized('hello');
@@ -566,8 +564,8 @@ describe('throwing / rejecting', () => {
 			return new Promise((_, reject) => reject(new Error(message)));
 		});
 		const memoized = memoize(willReject);
-		let firstError;
-		let secondError;
+		let firstError: any;
+		let secondError: any;
 
 		try {
 			await memoized('hello');
@@ -595,8 +593,8 @@ describe('throwing / rejecting', () => {
 			return { hello: 'world' };
 		});
 		const memoized = memoize(canThrow);
-		let firstError;
-		let secondError;
+		let firstError: any;
+		let secondError: any;
 
 		// standard memoization
 		const result1 = memoized(false);
@@ -657,8 +655,8 @@ describe('throwing / rejecting', () => {
 				throw value;
 			});
 			const memoized = memoize(throwValue);
-			let firstError;
-			let secondError;
+			let firstError: any;
+			let secondError: any;
 
 			try {
 				memoized();
@@ -697,7 +695,7 @@ describe('throwing / rejecting', () => {
 		// this promise will reject after 100ms
 		try {
 			memoized('reject');
-		} catch (e) {
+		} catch (_) {
 			/* empty */
 		}
 
@@ -724,8 +722,8 @@ describe('throwing / rejecting', () => {
 });
 
 describe('maxAge option', () => {
-	let mock;
-	let memoized;
+	let mock: Mock<(a: number, b: number) => Promise<unknown>>;
+	let memoized: (arg0: number, arg1: number) => any;
 
 	beforeEach(() => {
 		mock = vi.fn(
@@ -735,18 +733,18 @@ describe('maxAge option', () => {
 	});
 
 	test('should break the memoization cache if maxAge elapsed', async () => {
-		expect(memoized(1, 2)).resolves.toBe(3);
-		expect(memoized(1, 2)).resolves.toBe(3);
+		await expect(memoized(1, 2)).resolves.toBe(3);
+		await expect(memoized(1, 2)).resolves.toBe(3);
 
 		await delay(50);
 
-		expect(memoized(1, 2)).resolves.toBe(3);
+		await expect(memoized(1, 2)).resolves.toBe(3);
 		expect(mock).toHaveBeenCalledTimes(1);
 
 		await delay(200);
 
-		expect(memoized(1, 2)).resolves.toBe(3);
-		expect(memoized(1, 2)).resolves.toBe(3);
+		await expect(memoized(1, 2)).resolves.toBe(3);
+		await expect(memoized(1, 2)).resolves.toBe(3);
 		expect(mock).toHaveBeenCalledTimes(2);
 	});
 });
