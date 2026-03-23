@@ -24,7 +24,7 @@ export function memoize<
 	let lastResult: ReturnType<ResultFn>;
 	let calledOnce = false;
 	let stale = false;
-	let timer: NodeJS.Timeout;
+	let timer: ReturnType<typeof setTimeout>;
 
 	// NOTE(joel): Breaking cache when context or arguments change.
 	// Because of `this` (no pun intended), it cannot be written as an
@@ -62,7 +62,7 @@ export function memoize<
 		// is only relevant server side.
 		// @see https://nodejs.org/api/timers.html#timers_immediate_unref
 		if (typeof window === 'undefined') {
-			timer.unref();
+			(timer as { unref?: () => void }).unref?.();
 		}
 
 		// NOTE(joel): If the `lastResult` is a promise, handle its possible
@@ -94,10 +94,7 @@ export function memoize<
 const safeIsNaN =
 	Number.isNaN ||
 	function ponyfill(value) {
-		// NOTE(joel): NaN is the only value in JavaScript which is not equal to
-		// itself.
-		// biome-ignore lint/suspicious/noSelfCompare: .
-						return typeof value === 'number' && value !== value;
+		return typeof value === 'number' && value !== value;
 	};
 
 ////////////////////////////////////////////////////////////////////////////////
